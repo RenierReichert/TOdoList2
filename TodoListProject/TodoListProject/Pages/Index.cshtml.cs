@@ -1,41 +1,63 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
+using TodoListProject.Repo;
 
 namespace TodoListProject.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly ILogger<IndexModel> _logger;
 
-        public List<Todo> todoList = new List<Todo>();
+        public IEnumerable<Todo> todoList { get; set; }
+        public static Todo NewTodo { get; set; } = new Todo(false, DateTime.Now, "TEEEEEEEEEST");
 
-        public IndexModel(ILogger<IndexModel> logger)
+        private ITodoRepo _itodoRepo;
+
+        public IndexModel(ITodoRepo itodorepo)
         {
-            _logger = logger;
+            this._itodoRepo = itodorepo;
+           // _itodoRepo.AddAsync(new Todo(false, DateTime.Now, "TEST"));
+            _ = this.GetList();
         }
 
-        public void OnGet()
+        public async Task<IEnumerable<Todo>> GetList()
         {
-            for (int i = 0; i < 5; i++)
+            todoList = await (_itodoRepo.GetAllAsync());
+            return await (Task.FromResult(todoList));
+        }        
+
+        public async Task<IActionResult> OnPost()
+        {
+
+            if(!ModelState.IsValid)
             {
-                var t = new Todo((i % 2 == 0), DateTime.Now, $"This is task number {i}");
-                todoList.Add(t);
+                todoList = await (_itodoRepo.GetAllAsync());
+                return Page();
             }
+
+            await _itodoRepo.AddAsync(NewTodo);
+            return RedirectToPage();
         }
 
     }
 
     public class Todo
     {
-        public bool done { get; set; }
-        public DateTime dueDate { get; set; }
+        [BindProperty]
+        public bool done { get; set; } = false;
+        public DateTime dueDate { get; set; } = DateTime.Now;
+        [Required]
         public string? description { get; set; }
 
-        public Todo(bool done, DateTime dueDate, string? description)
+        public Todo()
+        { }
+        
+        public Todo(bool done, DateTime dueDate, string description)
         {
             this.done = done;
             this.dueDate = dueDate;
             this.description = description;
         }
     }
+
 }
