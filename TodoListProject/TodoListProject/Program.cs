@@ -1,11 +1,23 @@
 using TodoListProject.Repo;
+using TodoListProject.DataAccess;
+using Microsoft.EntityFrameworkCore;
+using System.Xml.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-builder.Services.AddTransient<ITodoRepo, TodoInMemoryRepo>();
+builder.Services.AddTransient<ITodoRepo, TodoRepo>();
+builder.Services.AddTransient<ITodoTypeRepo, TodoTypeRepo>();
+
+builder.Services.AddDbContext<TodoContext>(options =>
+{
+    var folder = Environment.SpecialFolder.LocalApplicationData;
+    var path = Environment.GetFolderPath(folder);
+    var DbPath = System.IO.Path.Join(path, "TODODB");
+    options.UseSqlite($"Data Source={DbPath}");
+});
 
 var app = builder.Build();
 

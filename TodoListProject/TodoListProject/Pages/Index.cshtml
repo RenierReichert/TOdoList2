@@ -1,13 +1,19 @@
 ﻿@page
+@using TodoListProject.Pages;
 @model IndexModel
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <form method="post">
     <ol>
         <li>
-            <label asp-for="@IndexModel.NewTodo.description"></label>
-            <input asp-for="@IndexModel.NewTodo.description">
-            <span asp-validation-for="@IndexModel.NewTodo.description"></span>
+            <label asp-for="NewTodo.description"></label>
+            <input asp-for="NewTodo.description">
+            <span asp-validation-for="NewTodo.description"></span>
+        </li>
+        <li>
+            <label asp-for="NewTodo.todoType.Id"></label>
+            <select asp-for="NewTodo.todoType.Id" asp-items="Model.selectList"></select>
+            <span asp-validation-for="NewTodo.todoType.Id"></span>
         </li>
         <li>
             <button>Add Todo</button>
@@ -15,23 +21,31 @@
     </ol>
 </form>
 
+
 @if(Model.todoList is not null)
 {
     <table>
         <thead>
             <tr>
-                <th>Done</th>
-                <th>What</th>            
+                
+                <th>What</th>
                 <th>Due</th>
+                <th>Done</th>
+                <th>Type</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var todo in Model.todoList)
             {                
                 <tr>                     
-                    <td>@Html.CheckBox("done", todo.done)</td>
+                    
                     <td>@todo.description</td>            
-                    <td>@todo.dueDate.ToString()</td>
+                    <td>@todo.dueDate.ToShortDateString()</td>
+                    <td><input asp-for="@todo.done" value="@todo.done"/></td>
+                    @if (todo.todoType is not null)
+                    {
+                        <td>@todo.todoType.Name</td>
+                    }
                 </tr>
             }
         </tbody>

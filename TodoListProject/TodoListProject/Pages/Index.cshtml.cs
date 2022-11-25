@@ -1,63 +1,69 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using TodoListProject.Entities;
 using TodoListProject.Repo;
 
 namespace TodoListProject.Pages
 {
     public class IndexModel : PageModel
     {
-
         public IEnumerable<Todo> todoList { get; set; }
-        public static Todo NewTodo { get; set; } = new Todo(false, DateTime.Now, "TEEEEEEEEEST");
+        public IEnumerable<TodoTypeEntity>? todoTypes { get; set; }
+        public IEnumerable<SelectListItem>? selectList { get; set; }
+
+        [BindProperty]
+        public Todo NewTodo { get; set; } = new();
 
         private ITodoRepo _itodoRepo;
+        private ITodoTypeRepo _itodoTypeRepo;
 
-        public IndexModel(ITodoRepo itodorepo)
+
+        public IndexModel(ITodoRepo itodorepo, ITodoTypeRepo itodoTypeRepo)
         {
             this._itodoRepo = itodorepo;
-           // _itodoRepo.AddAsync(new Todo(false, DateTime.Now, "TEST"));
-            _ = this.GetList();
+            this._itodoTypeRepo = itodoTypeRepo;
+            _ = this.GetDataAsync();
+            NewTodo.id = todoList.Count() + 1;
+            // _itodoRepo.AddAsync(new Todo(false, DateTime.Now, "TEST"));
+
         }
 
-        public async Task<IEnumerable<Todo>> GetList()
+        public async Task<IEnumerable<Todo>> GetData()
         {
             todoList = await (_itodoRepo.GetAllAsync());
+            todoTypes = await (_itodoTypeRepo.GetAll());
             return await (Task.FromResult(todoList));
-        }        
+        }
 
         public async Task<IActionResult> OnPost()
         {
 
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 todoList = await (_itodoRepo.GetAllAsync());
                 return Page();
             }
 
+
+
             await _itodoRepo.AddAsync(NewTodo);
             return RedirectToPage();
         }
 
-    }
 
-    public class Todo
-    {
-        [BindProperty]
-        public bool done { get; set; } = false;
-        public DateTime dueDate { get; set; } = DateTime.Now;
-        [Required]
-        public string? description { get; set; }
-
-        public Todo()
-        { }
-        
-        public Todo(bool done, DateTime dueDate, string description)
+        private async Task GetDataAsync()
         {
-            this.done = done;
-            this.dueDate = dueDate;
-            this.description = description;
+            todoTypes = await this._itodoTypeRepo.GetAll();
+            todoList = await this._itodoRepo.GetAllAsync();
+
+            selectList = todoTypes.Select(x => new SelectListItem
+            {
+                Value = x.Id.ToString(),
+                Text = x.Name
+            });
+
         }
     }
-
 }

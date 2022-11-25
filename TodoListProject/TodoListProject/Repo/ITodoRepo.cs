@@ -1,4 +1,5 @@
 ﻿using TodoListProject.Pages;
+using TodoListProject.Entities;
 
 namespace TodoListProject.Repo
 {
